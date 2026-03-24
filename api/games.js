@@ -1,8 +1,8 @@
 // /api/games.js — Vercel Serverless Function
 // All secrets, engine logic, and sheet access live here — never exposed to browser
 
-const SHEET_ID = “1M7xHG_IgczBJULHbabsq4qDJilF2VWetarV_DyuGdDE”;
-const SHEET_KEY = “AIzaSyCI4PAjwne4YhcRKHWz17JSTeMLP7h6vMU”;
+const SHEET_ID = "1M7xHG_IgczBJULHbabsq4qDJilF2VWetarV_DyuGdDE";
+const SHEET_KEY = "AIzaSyCI4PAjwne4YhcRKHWz17JSTeMLP7h6vMU";
 
 // ══════════ CONSTANTS ══════════
 const K = { pythExp: 1.83, runsPerWar: 10, bpWar: 3.47, hfa: 1.07, minEdge: 0.05, minOuEv: 0.03, nbR: 3.15 };
