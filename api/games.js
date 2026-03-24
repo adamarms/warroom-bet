@@ -199,9 +199,11 @@ async function fMLB(oddsGames) {
       const hL = g.lineups?.homePlayers?.map(p => p.fullName) || [];
       const sp = g.teams?.away?.probablePitcher?.fullName || "TBD";
       if (!mlbMap[key] || sp !== "TBD")
-        mlbMap[key] = { aSP: sp, hSP: g.teams?.home?.probablePitcher?.fullName || "TBD",
+          var gt = new Date(g.gameDate); var etMs = gt.getTime() - 4*60*60*1000; var etD = new Date(etMs);
+          var hh = etD.getUTCHours(); var mm = etD.getUTCMinutes(); var ap = hh >= 12 ? "PM" : "AM"; var h12 = hh % 12 || 12;
+          mlbMap[key] = { aSP: sp, hSP: g.teams?.home?.probablePitcher?.fullName || "TBD",
           aL, hL, aC: aL.length >= 9, hC: hL.length >= 9,
-          time: new Date(g.gameDate).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true }) };
+          time: h12 + ":" + String(mm).padStart(2, "0") + " " + ap };
     }); });
     return oddsGames.map(g => { const m = mlbMap[g.id]; if (!m) return g;
       return { ...g, aSP: m.aSP || g.aSP, hSP: m.hSP || g.hSP, aL: m.aL.length > 0 ? m.aL : g.aL, hL: m.hL.length > 0 ? m.hL : g.hL, aC: m.aC || g.aC, hC: m.hC || g.hC, time: m.time || g.time }; });
