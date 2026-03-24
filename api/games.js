@@ -377,9 +377,9 @@ module.exports = async function handler(req, res) {
       fSheet("Pitcher WAR!A1:E200").catch(() => [])
     ]);
     const odds = oddsData.odds || {}; const oddsGames = oddsData.games || [];
-    // RotoWire enrichment temporarily disabled for debugging
-    // const rwEnriched = await fRotoWire(oddsGames).catch(() => oddsGames);
-    const mlb = await fMLB(oddsGames).catch(() => oddsGames);
+    // Enrichment chain: RotoWire projected lineups first, then MLB confirmed overwrites
+    const rwEnriched = await fRotoWire(oddsGames).catch(() => oddsGames);
+    const mlb = await fMLB(rwEnriched).catch(() => rwEnriched);
     // Weather — limit to 5 concurrent to avoid rate limits
     const wm = {};
     const homeTeams = [...new Set(mlb.map(g => g.home))];
