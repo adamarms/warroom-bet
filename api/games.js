@@ -89,10 +89,10 @@ function engine(g) {
   ouLines.sort((a, b) => (b.ev || 0) - (a.ev || 0));
   const bestOu = ouLines[0]?.ev > K.minOuEv ? ouLines[0] : null;
   let rrl = null; if (side) {
-    const isDog = (side === "away" && g.aOdds > 0) || (side === "home" && g.hOdds > 0);
-    if (isDog) { const pW2 = side === "away" ? conv.pAwayWinBy2 : conv.pHomeWinBy2; const rrlO = side === "away" ? g.aRrl : g.hRrl;
-      if (rrlO) { const impl = a2i(rrlO); const dec = rrlO > 0 ? 1 + rrlO / 100 : 1 + 100 / (-rrlO); const ev = pW2 * dec - 1;
-        rrl = { pWin: pW2, impl, edge: pW2 - impl, ev, odds: rrlO }; } } }
+    const pW2 = side === "away" ? conv.pAwayWinBy2 : conv.pHomeWinBy2;
+    const rrlO = side === "away" ? g.aRrl : g.hRrl;
+    if (rrlO) { const impl = a2i(rrlO); const dec = rrlO > 0 ? 1 + rrlO / 100 : 1 + 100 / (-rrlO); const ev = pW2 * dec - 1;
+      rrl = { pWin: pW2, impl, edge: pW2 - impl, ev, odds: rrlO }; } }
   return { aP, hP, aI, hI, aE, hE, side, edge: side === "away" ? aE : side === "home" ? hE : null,
     playTeam: side === "away" ? g.away : side === "home" ? g.home : null,
     playOdds: side === "away" ? g.aOdds : side === "home" ? g.hOdds : null,
