@@ -455,8 +455,8 @@ module.exports = async function handler(req, res) {
     const [oddsData, tpR, bR, pR] = await Promise.all([
       fOdds().catch(() => ({ odds: {}, games: [] })),
       fSheet("Team Projections!A1:E35").catch(() => []),
-      fSheet("Batter WAR!A1:E500").catch(() => []),
-      fSheet("Pitcher WAR!A1:E200").catch(() => [])
+      fSheet("Batter WAR!A1:E4000").catch(() => []),
+      fSheet("Pitcher WAR!A1:E5000").catch(() => [])
     ]);
     const odds = oddsData.odds || {}; const oddsGames = oddsData.games || [];
     // Enrichment chain: RotoWire projected lineups first, then MLB confirmed overwrites
