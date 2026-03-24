@@ -371,7 +371,7 @@ ouData: o.ou, aRrl: o.rl.aDog || null, hRrl: o.rl.hDog || null, weather: wm?.[g.
 }
 
 // ══════════ HANDLER ══════════
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
 res.setHeader(“Access-Control-Allow-Origin”, “*”);
 res.setHeader(“Cache-Control”, “s-maxage=120, stale-while-revalidate=300”);
 
