@@ -7,8 +7,8 @@ const SHEET_KEY = "AIzaSyCI4PAjwne4YhcRKHWz17JSTeMLP7h6vMU";
 // ══════════ CONSTANTS ══════════
 const K = { pythExp: 1.83, runsPerWar: 10, bpWar: 3.47, hfa: 1.07, minEdge: 0.05, minOuEv: 0.03, nbR: 3.15 };
 const PF = {ARI:1.04,ATL:0.99,BAL:1.01,BOS:1.04,CHC:1.05,CHW:1.03,CIN:1.08,CLE:0.97,COL:1.18,DET:0.98,HOU:1.00,KC:1.05,LAA:0.97,LAD:0.97,MIA:0.93,MIL:1.01,MIN:1.01,NYM:0.95,NYY:1.06,OAK:0.96,SAC:0.96,PHI:1.03,PIT:0.94,SD:0.95,SF:0.93,SEA:0.95,STL:0.98,TB:0.90,TEX:1.00,TOR:1.02,WAS:1.00};
-const ORI = {ARI:0,ATL:150,BAL:22,BOS:45,CHC:45,CHW:112,CIN:112,CLE:0,COL:0,DET:150,HOU:67,KC:45,LAA:45,LAD:22,MIA:112,MIL:135,MIN:90,NYM:22,NYY:67,OAK:45,SAC:45,PHI:22,PIT:112,SD:0,SF:112,SEA:45,STL:45,TB:45,TEX:67,TOR:338,WAS:22};
-const STD = {ARI:{lat:33.45,lon:-112.07},ATL:{lat:33.89,lon:-84.47},BAL:{lat:39.28,lon:-76.62},BOS:{lat:42.35,lon:-71.10},CHC:{lat:41.95,lon:-87.66},CHW:{lat:41.83,lon:-87.63},CIN:{lat:39.10,lon:-84.51},CLE:{lat:41.50,lon:-81.69},COL:{lat:39.76,lon:-105.00},DET:{lat:42.34,lon:-83.05},HOU:{lat:29.76,lon:-95.36},KC:{lat:39.05,lon:-94.48},LAA:{lat:33.80,lon:-117.88},LAD:{lat:34.07,lon:-118.24},MIA:{lat:25.78,lon:-80.22},MIL:{lat:43.03,lon:-87.97},MIN:{lat:44.98,lon:-93.28},NYM:{lat:40.76,lon:-73.85},NYY:{lat:40.83,lon:-73.93},OAK:{lat:38.58,lon:-121.49},SAC:{lat:38.58,lon:-121.49},PHI:{lat:39.91,lon:-75.17},PIT:{lat:40.45,lon:-80.01},SD:{lat:32.71,lon:-117.16},SF:{lat:37.78,lon:-122.39},SEA:{lat:47.59,lon:-122.33},STL:{lat:38.62,lon:-90.19},TB:{lat:27.77,lon:-82.65},TEX:{lat:32.75,lon:-97.08},TOR:{lat:43.64,lon:-79.39},WAS:{lat:38.87,lon:-77.01}};
+const ORI = {ARI:0,ATL:145,BAL:31,BOS:45,CHC:37,CHW:127,CIN:122,CLE:0,COL:4,DET:150,HOU:343,KC:46,LAA:44,LAD:26,MIA:128,MIL:129,MIN:129,NYM:13,NYY:75,OAK:55,SAC:55,PHI:9,PIT:116,SD:0,SF:85,SEA:49,STL:62,TB:359,TEX:30,TOR:345,WAS:28};
+const STD = {ARI:{lat:33.4453,lon:-112.0667},ATL:{lat:33.8911,lon:-84.4682},BAL:{lat:39.2839,lon:-76.6217},BOS:{lat:42.3467,lon:-71.0972},CHC:{lat:41.9484,lon:-87.6553},CHW:{lat:41.8299,lon:-87.6338},CIN:{lat:39.0974,lon:-84.5065},CLE:{lat:41.4962,lon:-81.6852},COL:{lat:39.7559,lon:-104.9942},DET:{lat:42.3390,lon:-83.0485},HOU:{lat:29.7573,lon:-95.3555},KC:{lat:39.0517,lon:-94.4803},LAA:{lat:33.8003,lon:-117.8827},LAD:{lat:34.0739,lon:-118.2400},MIA:{lat:25.7781,lon:-80.2197},MIL:{lat:43.0280,lon:-87.9712},MIN:{lat:44.9818,lon:-93.2775},NYM:{lat:40.7571,lon:-73.8458},NYY:{lat:40.8296,lon:-73.9262},OAK:{lat:37.7516,lon:-122.2005},SAC:{lat:38.5816,lon:-121.5064},PHI:{lat:39.9061,lon:-75.1665},PIT:{lat:40.4469,lon:-80.0058},SD:{lat:32.7076,lon:-117.1570},SF:{lat:37.7786,lon:-122.3893},SEA:{lat:47.5914,lon:-122.3326},STL:{lat:38.6226,lon:-90.1928},TB:{lat:27.7682,lon:-82.6534},TEX:{lat:32.7473,lon:-97.0845},TOR:{lat:43.6414,lon:-79.3894},WAS:{lat:38.8730,lon:-77.0074}};
 const DOME = new Set(["ARI","HOU","MIA","MIL","TB","TEX","TOR","SEA"]);
 const TID = {108:"LAA",109:"ARI",110:"BAL",111:"BOS",112:"CHC",113:"CIN",114:"CLE",115:"COL",116:"DET",117:"HOU",118:"KC",119:"LAD",120:"WAS",121:"NYM",133:"OAK",134:"PIT",135:"SD",136:"SEA",137:"SF",138:"STL",139:"TB",140:"TEX",141:"TOR",142:"MIN",143:"PHI",144:"ATL",145:"CHW",146:"MIA",147:"NYY",158:"MIL",568:"SAC"};
 
@@ -436,7 +436,9 @@ async function fWeather(team, gd) {
     const d = gd?.slice(0, 10) || new Date().toISOString().slice(0, 10);
     const r = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${s.lat}&longitude=${s.lon}&hourly=temperature_2m,wind_speed_10m,wind_direction_10m,precipitation_probability&temperature_unit=fahrenheit&wind_speed_unit=mph&timezone=America/New_York&start_date=${d}&end_date=${d}`);
     if (!r.ok) return null; const data = await r.json(); if (!data.hourly) return null;
-    const h = gd ? new Date(gd).getHours() : 19;
+    // Convert commence time to ET hour for correct forecast slot
+    let h = 19; // default 7pm
+    if (gd) { const gt = new Date(gd); const etMs = gt.getTime() - 4 * 60 * 60 * 1000; h = new Date(etMs).getUTCHours(); }
     const i = Math.min(h, (data.hourly.time?.length || 1) - 1);
     return { temp: data.hourly.temperature_2m?.[i], windSpeed: data.hourly.wind_speed_10m?.[i], windDir: data.hourly.wind_direction_10m?.[i], precipProb: data.hourly.precipitation_probability?.[i] };
   } catch { return null; }
