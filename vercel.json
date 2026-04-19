@@ -1,0 +1,14 @@
+{
+  "buildCommand": "",
+  "outputDirectory": ".",
+  "framework": null,
+  "functions": {
+    "api/games.js":   { "maxDuration": 30 },
+    "api/fp.js":      { "maxDuration": 30 },
+    "api/results.js": { "maxDuration": 30 }
+  },
+  "rewrites": [
+    { "source": "/api/(.*)", "destination": "/api/$1" },
+    { "source": "/(.*)",     "destination": "/index.html" }
+  ]
+}
