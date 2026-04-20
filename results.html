@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>WAR Room — Results</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='4' fill='%231a472a'/><text x='16' y='22' text-anchor='middle' font-family='Georgia' font-size='18' font-weight='bold' fill='%23e8c840'>W</text></svg>"/>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:#f5f0e1;font-family:'IBM Plex Mono','Courier New',monospace;color:#2a2a22}
+  .header{background:linear-gradient(180deg,#2d6b42,#1a472a);border-bottom:4px solid #e8c840;padding:12px 16px}
+  .header h1{font-family:Georgia,serif;font-size:18px;color:#f5f0e1;letter-spacing:2px}
+  .header .sub{font-size:9px;color:#e8c840;letter-spacing:4px}
+  .back{color:#e8c840;font-size:9px;text-decoration:none;display:block;margin-top:6px}
+  .wrap{max-width:900px;margin:0 auto;padding:16px 12px 40px}
+  .title{font-family:Georgia,serif;font-size:14px;color:#1a472a;letter-spacing:1px;margin-bottom:12px}
+  .boxes{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}
+  .box{background:#fff;border:1px solid #d4c4a0;border-radius:8px;padding:10px 12px;flex:1;min-width:80px}
+  .box-label{font-size:7px;color:#8b5e3c;letter-spacing:1.5px;margin-bottom:2px}
+  .box-val{font-size:18px;font-weight:700}
+  .chart-wrap{background:#fff;border:1px solid #d4c4a0;border-radius:8px;padding:12px;margin-bottom:12px}
+  .chart-label{font-size:7px;color:#8b5e3c;letter-spacing:1.5px;margin-bottom:6px}
+  .mkt-head{font-size:8px;font-weight:700;color:#8b5e3c;letter-spacing:1.5px;margin-bottom:6px}
+  .mkt-cols{display:grid;grid-template-columns:100px 70px 50px 60px 70px;gap:4px;padding:4px 12px;font-size:7px;color:#8b5e3c;letter-spacing:1px}
+  .mkt-row{display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:#faf8f0;border:1px solid #d4c4a0;border-radius:6px;margin-bottom:4px;font-size:9px}
+  .mkt-no-plays{background:#faf8f0;border:1px solid #d4c4a0;border-radius:6px;padding:8px 12px;margin-bottom:4px;font-size:9px;color:#8b5e3c}
+  .filters{display:flex;gap:4px;margin:14px 0 8px}
+  .btn{background:#ece5d0;color:#8b5e3c;border:1px solid #d4c4a0;border-radius:4px;padding:4px 10px;font-size:9px;font-weight:700;font-family:inherit;cursor:pointer}
+  .btn.active{background:#1a472a;color:#f5f0e1;border-color:#1a472a}
+  .plays-count{font-size:8px;color:#8b5e3c;margin-bottom:6px}
+  .play{background:#fff;border:1px solid #d4c4a0;border-radius:6px;padding:7px 10px;margin-bottom:3px;font-size:9px}
+  .play-header{display:flex;justify-content:space-between;margin-bottom:3px;font-weight:700}
+  .play-row{display:flex;align-items:center;border-top:1px solid #ece5d0;padding-top:2px;gap:4px}
+  .play-type{color:#8b5e3c;min-width:24px}
+  .win{color:#1a6b35;font-weight:700}
+  .loss{color:#b34a28;font-weight:700}
+  .push{color:#8b5e3c;font-weight:700}
+  .green{color:#1a6b35}
+  .red{color:#b34a28}
+  .gold{color:#b38a20}
+  .loading{text-align:center;padding:40px;color:#8b5e3c}
+  .error{text-align:center;padding:40px;color:#b34a28}
+</style>
+</head>
+<body>
+<div class="header">
+  <h1>WAR ROOM</h1>
+  <div class="sub">CAPITAL</div>
+  <a href="/" class="back">← Back to App</a>
+</div>
+<div class="wrap">
+  <div class="title">Results</div>
+  <div id="content"><div class="loading">Loading...</div></div>
+</div>
+
+<script>
+var GREEN='#1a6b35', RED='#b34a28', GOLD='#b38a20', MUT='#8b5e3c', DARK='#2a2a22';
+
+function fmt(n){ return n==null?'--':(n>=0?'+':'')+n+'u'; }
+function fmtPct(n){ return n==null?'--':n+'%'; }
+function clvStr(n){ return n==null?'--':'CLV '+(n>0?'+':'')+n+'c'; }
+
+function render(data){
+  var s=data.stats||{}, tot=s.total||{}, ml=s.ml||{}, ou=s.ou||{}, rl=s.rl||{};
+  var plays=data.plays||[], cd=data.chartData||[];
+  var tpu=tot.plUnits||0, tw=tot.wins||0, tl=tot.losses||0;
+  var wPct=tw+tl>0?Math.round(tw/(tw+tl)*1000)/10:null;
+  var plColor=tpu>=0?GREEN:RED;
+  var wColor=wPct>=52?GREEN:wPct<45?RED:DARK;
+
+  var html='';
+
+  // Summary boxes
+  html+='<div class="boxes">';
+  html+=box('PLAYS', tw+tl, DARK);
+  html+=box('RECORD', tw+'-'+tl, DARK);
+  html+=box('P/L', (tpu>=0?'+':'')+tpu+'u', plColor);
+  html+=box('WIN%', wPct!=null?wPct+'%':'--', wColor);
+  html+='</div>';
+
+  // Chart
+  if(cd.length>1){
+    var vals=cd.map(function(x){return x.total;});
+    var minV=Math.min.apply(null,vals), maxV=Math.max.apply(null,vals);
+    var rng=maxV-minV||1, W=280, H=60;
+    var pts=cd.map(function(x,i){
+      return (i/(cd.length-1)*W)+','+(H-((x.total-minV)/rng*H));
+    }).join(' ');
+    var zY=H-((0-minV)/rng*H);
+    var zLine=minV<0&&maxV>=0?'<line x1="0" y1="'+zY+'" x2="'+W+'" y2="'+zY+'" stroke="#d4c4a0" stroke-width="1" stroke-dasharray="3,3"/>':'';
+    html+='<div class="chart-wrap"><div class="chart-label">CUMULATIVE P/L (units)</div>';
+    html+='<svg viewBox="0 0 '+W+' '+(H+4)+'" style="width:100%;height:70px">'+zLine;
+    html+='<polyline points="'+pts+'" fill="none" stroke="'+(tpu>=0?GREEN:RED)+'" stroke-width="2"/></svg></div>';
+  }
+
+  // By market
+  html+='<div class="mkt-head">BY MARKET</div>';
+  html+='<div class="mkt-cols"><span></span><span>RECORD</span><span>WIN%</span><span>P/L</span><span>CLV</span></div>';
+  html+=mktRow('OFFICIAL ML', ml, GREEN);
+  html+=mktRow('BETA O/U', ou, '#7a5aaa');
+  html+=mktRow('BETA RL', rl, '#7a5aaa');
+
+  // Filters
+  html+='<div class="filters">';
+  ['all','ml','ou','rl'].forEach(function(k){
+    html+='<button class="btn'+(window._filt===k?' active':'')+'" onclick="setFilt(\''+k+'\')">'+(k==='all'?'ALL':k.toUpperCase())+'</button>';
+  });
+  html+='</div>';
+
+  // Plays list
+  var filt=window._filt||'all';
+  var filtered=filt==='ml'?plays.filter(function(p){return p.mlTeam&&p.mlTier&&p.mlTier!=='No Play (final)';}):
+    filt==='ou'?plays.filter(function(p){return p.ouPlay&&p.ouTier&&p.ouTier!=='No Play (final)';}):
+    filt==='rl'?plays.filter(function(p){return p.rlTeam&&p.rlTier&&p.rlTier!=='No Play (final)';}):
+    plays.filter(function(p){return p.mlTeam||p.ouPlay||p.rlTeam;});
+
+  html+='<div class="plays-count">'+filtered.length+' plays</div>';
+
+  filtered.forEach(function(p){
+    var hasMl=p.mlTeam&&p.mlTier&&p.mlTier!=='No Play (final)';
+    var hasOu=p.ouPlay&&p.ouTier&&p.ouTier!=='No Play (final)';
+    var hasRl=p.rlTeam&&p.rlTier&&p.rlTier!=='No Play (final)';
+    if(!hasMl&&!hasOu&&!hasRl)return;
+    html+='<div class="play">';
+    html+='<div class="play-header"><span>'+p.away+' @ '+p.home+'</span><span style="color:'+MUT+';font-weight:normal">'+p.date+'</span></div>';
+    if(hasMl)html+='<div class="play-row"><span class="play-type">ML</span><span><b>'+p.mlTeam+'</b> '+(p.mlOdds>0?'+'+p.mlOdds:p.mlOdds)+'</span>'+resStr(p.mlResult,p.mlPL)+'</div>';
+    if(hasOu)html+='<div class="play-row"><span class="play-type">OU</span><span><b>'+p.ouPlay+'</b> '+(p.ouJuice>0?'+'+p.ouJuice:p.ouJuice)+'</span>'+resStr(p.ouResult,p.ouPL)+'</div>';
+    if(hasRl)html+='<div class="play-row"><span class="play-type">RL</span><span><b>'+p.rlTeam+' -1.5</b> '+(p.rlOdds>0?'+'+p.rlOdds:p.rlOdds)+'</span>'+resStr(p.rlResult,p.rlPL)+'</div>';
+    html+='</div>';
+  });
+
+  document.getElementById('content').innerHTML=html;
+
+  // Re-attach filter buttons
+  document.querySelectorAll('.btn').forEach(function(btn){
+    var k=btn.textContent.toLowerCase()==='all'?'all':btn.textContent.toLowerCase();
+    if(btn.textContent.toUpperCase()==='O/U') k='ou';
+    btn.onclick=function(){setFilt(k);};
+  });
+}
+
+function box(lbl,val,col){
+  return '<div class="box"><div class="box-label">'+lbl+'</div><div class="box-val" style="color:'+col+'">'+val+'</div></div>';
+}
+
+function mktRow(lbl,s,col){
+  if(!s||!s.plays)return '<div class="mkt-no-plays"><b style="color:'+col+'">'+lbl+'</b> — No plays recorded</div>';
+  var pc=(s.plUnits||0)>=0?GREEN:RED;
+  var wc=s.winPct>=52?GREEN:s.winPct<45?RED:DARK;
+  var cc=s.clvAvg>0?GREEN:s.clvAvg<0?RED:MUT;
+  return '<div class="mkt-row">'+
+    '<span style="font-weight:700;color:'+col+';min-width:100px">'+lbl+'</span>'+
+    '<span>'+s.wins+'-'+s.losses+(s.pushes>0?'-'+s.pushes:'')+'</span>'+
+    '<span style="color:'+wc+'">'+(s.winPct!=null?s.winPct+'%':'--')+'</span>'+
+    '<span style="color:'+pc+';font-weight:700">'+((s.plUnits||0)>=0?'+'+(s.plUnits||0):(s.plUnits||0))+'u</span>'+
+    '<span style="color:'+cc+'">'+(s.clvAvg!=null?(s.clvAvg>0?'+':'')+s.clvAvg+'c':'--')+'</span>'+
+    '</div>';
+}
+
+function resStr(result,pl){
+  if(!result)return '';
+  var w=result.toLowerCase().indexOf('win')>=0, lx=result.toLowerCase().indexOf('loss')>=0;
+  var cls=w?'win':lx?'loss':'push';
+  var lbl=w?'W':lx?'L':'P';
+  return '<span class="'+cls+'">'+lbl+(pl!=null?' '+(pl>=0?'+':'')+pl+'u':'')+'</span>';
+}
+
+window._filt='all';
+window._data=null;
+
+function setFilt(f){
+  window._filt=f;
+  if(window._data)render(window._data);
+}
+
+fetch('/api/results')
+  .then(function(r){return r.json();})
+  .then(function(d){
+    window._data=d;
+    render(d);
+  })
+  .catch(function(e){
+    document.getElementById('content').innerHTML='<div class="error">Error loading results: '+e.message+'</div>';
+  });
+</script>
+</body>
+</html>
