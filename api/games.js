@@ -335,16 +335,31 @@ async function fMLB(oddsGames) {
       const key = `${aw}-${hm}-${dt.date}`;
       const aL = g.lineups?.awayPlayers?.map(p => p.fullName) || [];
       const hL = g.lineups?.homePlayers?.map(p => p.fullName) || [];
-      const sp = g.teams?.away?.probablePitcher?.fullName || "TBD";
+      const awayP   = g.teams?.away?.probablePitcher;
+      const homeP   = g.teams?.home?.probablePitcher;
+      const sp      = awayP?.fullName || "TBD";
+      const hsp     = homeP?.fullName || "TBD";
+      // Detect openers: if probablePitcher's primary position is RP/CP, flag as opener
+      // fRotoWire will override with the primary pitcher from the sheet
+      const awayIsOpener = awayP && awayP.primaryPosition?.abbreviation
+        && !["SP","P"].includes(awayP.primaryPosition.abbreviation);
+      const homeIsOpener = homeP && homeP.primaryPosition?.abbreviation
+        && !["SP","P"].includes(homeP.primaryPosition.abbreviation);
+
       if (!mlbMap[key] || sp !== "TBD") {
         const gt = new Date(g.gameDate);
         const etMs = gt.getTime() - 4*60*60*1000;
         const etD = new Date(etMs);
         const hh = etD.getUTCHours(); const mm = etD.getUTCMinutes();
         const ap = hh >= 12 ? "PM" : "AM"; const h12 = hh % 12 || 12;
-        mlbMap[key] = { aSP: sp, hSP: g.teams?.home?.probablePitcher?.fullName || "TBD",
+        mlbMap[key] = {
+          aSP: awayIsOpener ? "TBD" : sp,    // TBD forces ROTOWIRE override
+          hSP: homeIsOpener ? "TBD" : hsp,
+          aOpener: awayIsOpener ? sp : null,  // preserve opener name for display
+          hOpener: homeIsOpener ? hsp : null,
           aL, hL,
-          time: h12 + ":" + String(mm).padStart(2, "0") + " " + ap };
+          time: h12 + ":" + String(mm).padStart(2, "0") + " " + ap
+        };
       }
     }); });
     return oddsGames.map(g => { const m = mlbMap[g.id]; if (!m) return g;
@@ -458,8 +473,9 @@ async function fRotoWire(oddsGames) {
 
       return {
         ...g,
-        // Always prefer ROTOWIRE SP — it shows the primary/bulk pitcher (PRIM badge)
-        // StatsAPI sometimes returns the opener which skews WAR projections
+        // ROTOWIRE always wins when it has a name — it shows the primary/bulk pitcher
+        // StatsAPI opener detection sets aSP/hSP to "TBD" when an RP is listed,
+        // which forces ROTOWIRE to provide the real starter
         aSP: m.aSP && m.aSP !== "TBD" ? m.aSP : g.aSP,
         hSP: m.hSP && m.hSP !== "TBD" ? m.hSP : g.hSP,
         aL: g.aL.length >= 9 ? g.aL : m.aL.length >= 9 ? m.aL : g.aL,
