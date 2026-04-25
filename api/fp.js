@@ -148,15 +148,14 @@ function getStats(map, name, split) {
 // Example: Abbott 40% strikes, Jones 50% InPlay/Strike → 40% × 50% = 20%
 function calcProb(pData, bData) {
   if (!pData || !bData) return null;
-  const pStrike = pData.strikePct;   // pitcher strike% e.g. 40
-  const bStrike = bData.strikePct;   // batter strike faced% e.g. 63
-  const bInPlay = bData.inPlayGame;  // batter full chain per pitch e.g. 20
-  if (!pStrike || !bStrike || bStrike <= 0 || bInPlay == null) return null;
+  const pStrike    = pData.strikePct;   // pitcher strike% e.g. 40
+  const bContStrike = bData.contStrike; // batter contact/strike% e.g. 50 (displayed as C/S in UI)
 
-  // Batter's P(in play | strike) = inPlayGame / (strikePct/100)
-  const inPlayPerStrike = bInPlay / (bStrike / 100);
-  // P(in play | any pitch) = pitcher throws strike × batter puts it in play per strike
-  const prob = Math.min(0.5, Math.max(0, (pStrike / 100) * (inPlayPerStrike / 100)));
+  // P(in play | any pitch) = pitcher Strike% × batter Contact/Strike%
+  // Both displayed in the UI — this is the intuitive matchup probability
+  // Example: Abbott 40% strikes × Jones 50% C/Strike = 20%
+  if (!pStrike || bContStrike == null) return null;
+  const prob = Math.min(0.5, Math.max(0, (pStrike / 100) * (bContStrike / 100)));
 
   if (prob <= 0) return null;
 
