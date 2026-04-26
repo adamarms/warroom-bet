@@ -340,13 +340,12 @@ async function fMLB(oddsGames) {
       const homeP   = g.teams?.home?.probablePitcher;
       const sp      = awayP?.fullName || "TBD";
       const hsp     = homeP?.fullName || "TBD";
-      // Detect openers: flag as opener if position is explicitly non-SP,
-      // OR if position data is missing entirely (StatsAPI sometimes omits it for RPs)
-      // fRotoWire will override with the bulk/primary pitcher from the sheet
-      const awayPos = awayP?.primaryPosition?.abbreviation;
-      const homePos = homeP?.primaryPosition?.abbreviation;
-      const awayIsOpener = awayP && (!awayPos || !["SP","P"].includes(awayPos));
-      const homeIsOpener = homeP && (!homePos || !["SP","P"].includes(homePos));
+      // Detect openers: if probablePitcher's primary position is RP/CP, flag as opener
+      // fRotoWire will override with the primary pitcher from the sheet
+      const awayIsOpener = awayP && awayP.primaryPosition?.abbreviation
+        && !["SP","P"].includes(awayP.primaryPosition.abbreviation);
+      const homeIsOpener = homeP && homeP.primaryPosition?.abbreviation
+        && !["SP","P"].includes(homeP.primaryPosition.abbreviation);
 
       if (!mlbMap[key] || sp !== "TBD") {
         const gt = new Date(g.gameDate);
@@ -385,18 +384,6 @@ function parseRotoWireTab(rows, dateTag) {
   const row7 = rows[6] || [];
   const row8 = rows[7] || [];
 
-  // Build SP map by team column (same approach as fp.js) to avoid pair-offset issues
-  const spByTeam = {};
-  for (let c = 0; c < row3.length; c++) {
-    let t = String(row3[c] || "").trim().toUpperCase();
-    if (!t || t.length > 4) continue;
-    if (t === "OAK") t = "SAC";
-    if (t === "WSH" || t === "WSN") t = "WAS";
-    if (t === "CWS") t = "CHW";
-    const sp = String(row8[c] || "").trim();
-    if (sp) spByTeam[t] = sp;
-  }
-
   for (let c = 1; c < row3.length; c += 2) {
     const awRaw = String(row3[c] || "").trim().toUpperCase();
     const hmRaw = String(row3[c + 1] || "").trim().toUpperCase();
@@ -410,9 +397,8 @@ function parseRotoWireTab(rows, dateTag) {
     const gameTime = String(row5[c] || "").trim();
     const awStatus = String(row7[c] || "").trim();
     const hmStatus = String(row7[c + 1] || "").trim();
-    // Use spByTeam lookup instead of column offset — handles opener situations correctly
-    const awSP = spByTeam[aw] || String(row8[c] || "").trim();
-    const hmSP = spByTeam[hm] || String(row8[c + 1] || "").trim();
+    const awSP = String(row8[c] || "").trim();
+    const hmSP = String(row8[c + 1] || "").trim();
 
     const awHasLineup = awStatus && !awStatus.toLowerCase().includes("unknown");
     const hmHasLineup = hmStatus && !hmStatus.toLowerCase().includes("unknown");
@@ -491,13 +477,8 @@ async function fRotoWire(oddsGames) {
         // ROTOWIRE always wins — it correctly identifies bulk/primary pitchers in opener situations
         // StatsAPI lists the opener (e.g. Bryan Hudson) but RotoWire shows the bulk guy (e.g. Sean Burke)
         // If RotoWire has a name, use it regardless of what StatsAPI says
-        // RotoWire SP always wins — reads row 8 of ROTOWIRE tab directly
-        // Handles opener situations where StatsAPI lists the opener (e.g. Bryan Hudson)
-        // but RotoWire correctly shows the bulk/primary pitcher (e.g. Sean Burke)
         aSP: (m.aSP && m.aSP !== "TBD") ? m.aSP : (g.aSP && g.aSP !== "TBD") ? g.aSP : "TBD",
         hSP: (m.hSP && m.hSP !== "TBD") ? m.hSP : (g.hSP && g.hSP !== "TBD") ? g.hSP : "TBD",
-        // Safety override: if RotoWire SP differs from what we just set, use RotoWire
-        // This catches cases where m.hSP was empty due to column read issues
         aL: g.aL.length >= 9 ? g.aL : m.aL.length >= 9 ? m.aL : g.aL,
         hL: g.hL.length >= 9 ? g.hL : m.hL.length >= 9 ? m.hL : g.hL,
         aC: isToday ? (g.aC || m.aC) : false,
