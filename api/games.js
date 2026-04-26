@@ -340,13 +340,12 @@ async function fMLB(oddsGames) {
       const homeP   = g.teams?.home?.probablePitcher;
       const sp      = awayP?.fullName || "TBD";
       const hsp     = homeP?.fullName || "TBD";
-      // Detect openers: flag as opener if position is explicitly non-SP,
-      // OR if position data is missing entirely (StatsAPI sometimes omits it for RPs)
-      // fRotoWire will override with the bulk/primary pitcher from the sheet
-      const awayPos = awayP?.primaryPosition?.abbreviation;
-      const homePos = homeP?.primaryPosition?.abbreviation;
-      const awayIsOpener = awayP && (!awayPos || !["SP","P"].includes(awayPos));
-      const homeIsOpener = homeP && (!homePos || !["SP","P"].includes(homePos));
+      // Detect openers: if probablePitcher's primary position is RP/CP, flag as opener
+      // fRotoWire will override with the primary pitcher from the sheet
+      const awayIsOpener = awayP && awayP.primaryPosition?.abbreviation
+        && !["SP","P"].includes(awayP.primaryPosition.abbreviation);
+      const homeIsOpener = homeP && homeP.primaryPosition?.abbreviation
+        && !["SP","P"].includes(homeP.primaryPosition.abbreviation);
 
       if (!mlbMap[key] || sp !== "TBD") {
         const gt = new Date(g.gameDate);
