@@ -474,9 +474,11 @@ async function fRotoWire(oddsGames) {
 
       return {
         ...g,
-        // ROTOWIRE always wins when it has a name — it shows the primary/bulk pitcher
-        // StatsAPI opener detection sets aSP/hSP to "TBD" when an RP is listed,
-        // which forces ROTOWIRE to provide the real starter
+        // ROTOWIRE always wins when it has a name — it correctly identifies the
+        // primary/bulk pitcher even when StatsAPI returns an opener.
+        // StatsAPI opener detection (position-based) is a best-effort first pass,
+        // but MLB doesn't always return position data in probablePitcher hydration.
+        // RotoWire is the authoritative source for WAR projection purposes.
         aSP: m.aSP && m.aSP !== "TBD" ? m.aSP : g.aSP,
         hSP: m.hSP && m.hSP !== "TBD" ? m.hSP : g.hSP,
         aL: g.aL.length >= 9 ? g.aL : m.aL.length >= 9 ? m.aL : g.aL,
@@ -580,8 +582,8 @@ module.exports = async function handler(req, res) {
       fSheet("Pitcher WAR!A1:E5000").catch(() => [])
     ]);
     const odds = oddsData.odds || {}; const oddsGames = oddsData.games || [];
-    const rwEnriched = await fRotoWire(oddsGames).catch(() => oddsGames);
-    const mlb = await fMLB(rwEnriched).catch(() => rwEnriched);
+    const mlbEnriched = await fMLB(oddsGames).catch(() => oddsGames);
+    const mlb = await fRotoWire(mlbEnriched).catch(() => mlbEnriched);
     const wm = {};
     const homeTeams = [...new Set(mlb.map(g => g.home))];
     for (let i = 0; i < homeTeams.length; i += 5) {
