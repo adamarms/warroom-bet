@@ -73,8 +73,10 @@ function calcWind(w, home) {
 function engine(g) {
   const bAW = pyth(g.pRS_a, g.pRA_a, K.pythExp), bHW = pyth(g.pRS_h, g.pRA_h, K.pythExp);
   if (!bAW || !bHW) return { error: "Missing RS/RA" };
-  const aLD = (g.tLW_a != null && g.oLW_a != null) ? g.tLW_a - g.oLW_a : 0;
-  const hLD = (g.tLW_h != null && g.oLW_h != null) ? g.tLW_h - g.oLW_h : 0;
+  const aPct = g.aPct ?? 0;
+  const hPct = g.hPct ?? 0;
+  const aLD = (g.tLW_a != null && g.oLW_a != null) ? (g.tLW_a - g.oLW_a) * (1 - aPct) : 0;
+  const hLD = (g.tLW_h != null && g.oLW_h != null) ? (g.tLW_h - g.oLW_h) * (1 - hPct) : 0;
   const aRS = g.pRS_a + (aLD * K.runsPerWar), hRS = g.pRS_h + (hLD * K.runsPerWar);
   const aSD = (g.spW_a != null && g.s5_a != null) ? ((g.spW_a * 5) + K.bpWar) - (g.s5_a + K.bpWar) : 0;
   const hSD = (g.spW_h != null && g.s5_h != null) ? ((g.spW_h * 5) + K.bpWar) - (g.s5_h + K.bpWar) : 0;
@@ -555,7 +557,7 @@ function asm(mlb, tp, bW, pW, odds, wm) {
     if (g.aSP && g.aSP !== "TBD" && spWa == null) gWarns.push("Away SP '" + g.aSP + "' (" + g.away + ") not found in Pitcher WAR");
     if (g.hSP && g.hSP !== "TBD" && spWh == null) gWarns.push("Home SP '" + g.hSP + "' (" + g.home + ") not found in Pitcher WAR");
     if (gWarns.length) warnings.push(...gWarns.map(w => g.id + ": " + w));
-    return { ...g, pRS_a: ta.pRS, pRA_a: ta.pRA, pRS_h: th.pRS, pRA_h: th.pRA,
+    return { ...g, aPct, hPct, pRS_a: ta.pRS, pRA_a: ta.pRA, pRS_h: th.pRS, pRA_h: th.pRA,
       oLW_a: ta.oW, oLW_h: th.oW, s5_a: ta.s5, s5_h: th.s5,
       tLW_a: luLW(g.aL, bW, aPct, g.away), tLW_h: luLW(g.hL, bW, hPct, g.home),
       spW_a: spWa, spW_h: spWh,
